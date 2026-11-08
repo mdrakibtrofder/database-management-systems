@@ -1,0 +1,6 @@
+{
+  "name": "CSE 2205 DBMS Study Hub",
+  "description": "Interactive study portal for CSE 2205 Database Management Systems at BAUST. Week-by-week lecture slides, notes, 20 interactive DBMS concept visualizers, quizzes, and exam prep.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
