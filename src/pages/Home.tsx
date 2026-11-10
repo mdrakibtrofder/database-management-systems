@@ -3,37 +3,102 @@ import {
   Database,
   ArrowRight,
   BookOpen,
-  Sparkles,
   FileText,
   Calendar,
-  CheckCircle2,
-  Clock,
   Layers,
-  Award,
-  ChevronRight,
+  FlaskConical,
   GraduationCap,
+  Map,
+  Library,
+  BookMarked,
+  ChevronRight,
 } from 'lucide-react';
-import { courseData, labsList } from '../data/course';
-import { useProgress } from '../context/ProgressContext';
+import { courseData } from '../data/course';
 
 interface HomeProps {
   onNavigate: (path: string) => void;
 }
 
 export const Home: React.FC<HomeProps> = ({ onNavigate }) => {
-  const { completedWeeks, progressPercentage, lastVisitedWeek } = useProgress();
+  const pages = [
+    {
+      title: 'Weekly Roadmap',
+      description:
+        '14 structured weekly modules guiding you through DBMS architecture, relational theory, SQL, indexing, and transactions.',
+      icon: Map,
+      path: '/weeks',
+      color: 'indigo',
+      badge: '14 Weeks',
+    },
+    {
+      title: 'Notes Library',
+      description:
+        'Lecture notes, handouts, and previous year exam papers — all available to read and download as PDF.',
+      icon: FileText,
+      path: '/notes',
+      color: 'violet',
+      badge: '6 Handouts',
+    },
+    {
+      title: 'Visualizations',
+      description:
+        '20 interactive concept visualizers: B+ trees, SQL playground, normalization stepper, precedence graphs, and more.',
+      icon: FlaskConical,
+      path: '/labs',
+      color: 'emerald',
+      badge: '20 Simulations',
+    },
+    {
+      title: 'Glossary',
+      description:
+        'Searchable reference of all key DBMS terms, definitions, and concepts organized by topic cluster.',
+      icon: BookMarked,
+      path: '/glossary',
+      color: 'teal',
+      badge: 'All Terms',
+    },
+  ];
 
-  const previewWeeks = courseData.weeks.slice(0, 4);
-  const lastWeek = lastVisitedWeek
-    ? courseData.weeks.find((w) => w.id === lastVisitedWeek)
-    : courseData.weeks[0];
+  const colorMap: Record<
+    string,
+    { badge: string; icon: string; border: string; hover: string; arrow: string }
+  > = {
+    indigo: {
+      badge: 'bg-indigo-50 text-indigo-700 dark:bg-indigo-950/60 dark:text-indigo-300',
+      icon: 'bg-indigo-600 text-white',
+      border: 'hover:border-indigo-300 dark:hover:border-indigo-700',
+      hover: 'group-hover:text-indigo-600 dark:group-hover:text-indigo-400',
+      arrow: 'text-indigo-600 dark:text-indigo-400',
+    },
+    violet: {
+      badge: 'bg-violet-50 text-violet-700 dark:bg-violet-950/60 dark:text-violet-300',
+      icon: 'bg-violet-600 text-white',
+      border: 'hover:border-violet-300 dark:hover:border-violet-700',
+      hover: 'group-hover:text-violet-600 dark:group-hover:text-violet-400',
+      arrow: 'text-violet-600 dark:text-violet-400',
+    },
+    emerald: {
+      badge: 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300',
+      icon: 'bg-emerald-600 text-white',
+      border: 'hover:border-emerald-300 dark:hover:border-emerald-700',
+      hover: 'group-hover:text-emerald-600 dark:group-hover:text-emerald-400',
+      arrow: 'text-emerald-600 dark:text-emerald-400',
+    },
+    teal: {
+      badge: 'bg-teal-50 text-teal-700 dark:bg-teal-950/60 dark:text-teal-300',
+      icon: 'bg-teal-600 text-white',
+      border: 'hover:border-teal-300 dark:hover:border-teal-700',
+      hover: 'group-hover:text-teal-600 dark:group-hover:text-teal-400',
+      arrow: 'text-teal-600 dark:text-teal-400',
+    },
+  };
 
   return (
-    <div className="space-y-16 py-6 sm:py-10">
-      {/* Hero Section */}
+    <div className="space-y-16 py-8 sm:py-12">
+      {/* ── Hero ── */}
       <section className="relative overflow-hidden rounded-3xl bg-gradient-to-b from-indigo-50/70 via-white to-white dark:from-slate-900/80 dark:via-slate-900 dark:to-slate-900 border border-slate-200/80 dark:border-slate-800 p-8 sm:p-12 lg:p-16">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-center">
-          {/* Hero Left Content */}
+          {/* Left */}
           <div className="lg:col-span-7 space-y-6">
             <div className="flex flex-wrap items-center gap-2 text-xs font-semibold text-slate-500 dark:text-slate-400">
               <span className="font-mono text-indigo-600 dark:text-indigo-400 font-bold">
@@ -48,17 +113,27 @@ export const Home: React.FC<HomeProps> = ({ onNavigate }) => {
             </div>
 
             <h1 className="text-3xl sm:text-5xl font-extrabold text-slate-900 dark:text-slate-100 tracking-tight leading-[1.15] text-balance">
-              Master Database Management Systems,{' '}
+              Database Management
+              <br />
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-violet-600 dark:from-indigo-400 dark:to-violet-400">
-                Week by Week.
+                Systems
               </span>
             </h1>
 
             <p className="text-base sm:text-lg text-slate-600 dark:text-slate-300 max-w-xl leading-relaxed">
-              Official study portal for BAUST CSE students. Explore 14 structured weekly modules, 13 slide decks, 6 comprehensive notes, and 20 interactive concept visualizers.
+              A <strong>Database Management System (DBMS)</strong> is software that enables users to
+              define, create, maintain, and control access to a database. It acts as an intermediary
+              between applications and persistent data, ensuring consistency, security, and
+              concurrent access across structured information.
             </p>
 
-            {/* Quick Actions */}
+            <p className="text-sm text-slate-500 dark:text-slate-400 max-w-xl leading-relaxed">
+              Core concepts include the relational model, SQL, normalization, indexing, transaction
+              management, concurrency control, and recovery — all of which form the backbone of
+              modern data-driven applications.
+            </p>
+
+            {/* CTAs */}
             <div className="flex flex-wrap items-center gap-3 pt-2">
               <button
                 onClick={() => onNavigate('/weeks')}
@@ -77,22 +152,26 @@ export const Home: React.FC<HomeProps> = ({ onNavigate }) => {
               </button>
             </div>
 
-            {/* Instructor Attribution */}
+            {/* Instructor */}
             <div className="pt-4 flex items-center gap-3 text-xs text-slate-500 border-t border-slate-100 dark:border-slate-800">
               <GraduationCap className="w-4 h-4 text-indigo-500 shrink-0" />
               <span>
-                Instructor: <strong>{courseData.instructor.name}</strong>, Lecturer, Department of CSE, BAUST
+                Instructor:{' '}
+                <strong>
+                  {courseData.instructor.name}
+                </strong>
+                , Lecturer, Department of CSE, BAUST
               </span>
             </div>
           </div>
 
-          {/* Hero Right: Animated Visual (Table → Index → B+ Tree) */}
+          {/* Right: decorative B+ tree visual */}
           <div className="lg:col-span-5 flex justify-center">
             <div className="relative w-full max-w-sm aspect-square rounded-2xl bg-gradient-to-br from-indigo-500/10 to-violet-500/10 dark:from-indigo-950/40 dark:to-violet-950/40 border border-indigo-200/50 dark:border-indigo-800/40 p-6 flex flex-col justify-between shadow-lg">
-              {/* Top: Relational Table */}
+              {/* Relational Table */}
               <div className="p-3.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs space-y-1.5">
                 <div className="flex items-center justify-between text-[11px] font-bold text-slate-400">
-                  <span>1. Relational Tuples</span>
+                  <span>Relational Tuples</span>
                   <span className="font-mono text-indigo-600">Student Table</span>
                 </div>
                 <div className="h-1.5 w-full bg-indigo-100 dark:bg-indigo-950 rounded-full overflow-hidden">
@@ -105,28 +184,27 @@ export const Home: React.FC<HomeProps> = ({ onNavigate }) => {
                 </div>
               </div>
 
-              {/* Middle: Index Routing */}
+              {/* Connector */}
               <div className="flex items-center justify-center gap-2 text-xs font-mono text-indigo-600 dark:text-indigo-400 font-bold">
                 <ArrowRight className="w-4 h-4 rotate-90" />
                 <span>B+ Tree Indexing O(log n)</span>
                 <ArrowRight className="w-4 h-4 rotate-90" />
               </div>
 
-              {/* Bottom: B+ Tree Nodes */}
+              {/* B+ Tree Nodes */}
               <div className="space-y-2">
                 <div className="w-24 mx-auto py-1.5 px-3 rounded-lg bg-indigo-600 text-white font-mono text-xs font-bold text-center shadow-md">
                   [ 30 | 60 ]
                 </div>
                 <div className="grid grid-cols-3 gap-2">
-                  <div className="p-1.5 rounded-lg bg-white dark:bg-slate-900 border border-emerald-500 text-center font-mono text-[10px] font-semibold text-emerald-700 dark:text-emerald-300">
-                    [ 10, 20 ]
-                  </div>
-                  <div className="p-1.5 rounded-lg bg-white dark:bg-slate-900 border border-emerald-500 text-center font-mono text-[10px] font-semibold text-emerald-700 dark:text-emerald-300">
-                    [ 30, 40 ]
-                  </div>
-                  <div className="p-1.5 rounded-lg bg-white dark:bg-slate-900 border border-emerald-500 text-center font-mono text-[10px] font-semibold text-emerald-700 dark:text-emerald-300">
-                    [ 60, 70 ]
-                  </div>
+                  {['[ 10, 20 ]', '[ 30, 40 ]', '[ 60, 70 ]'].map((node) => (
+                    <div
+                      key={node}
+                      className="p-1.5 rounded-lg bg-white dark:bg-slate-900 border border-emerald-500 text-center font-mono text-[10px] font-semibold text-emerald-700 dark:text-emerald-300"
+                    >
+                      {node}
+                    </div>
+                  ))}
                 </div>
               </div>
             </div>
@@ -134,216 +212,139 @@ export const Home: React.FC<HomeProps> = ({ onNavigate }) => {
         </div>
       </section>
 
-      {/* Quick Stats Grid & Continue Card */}
-      <section className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        {/* Continue Reading Card */}
-        <div
-          onClick={() => onNavigate(`/week/${lastWeek?.id || 1}`)}
-          className="cursor-pointer md:col-span-2 p-6 rounded-2xl border border-indigo-200 dark:border-indigo-900/60 bg-gradient-to-r from-indigo-50/60 to-white dark:from-indigo-950/40 dark:to-slate-900 shadow-sm flex items-center justify-between gap-4 group hover:shadow-md transition-all"
-        >
-          <div className="space-y-1">
-            <span className="text-[11px] font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">
-              Continue Where You Left Off
-            </span>
-            <h3 className="font-bold text-base text-slate-900 dark:text-slate-100 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
-              {lastWeek?.label} · {lastWeek?.title}
-            </h3>
-            <p className="text-xs text-slate-500 dark:text-slate-400 line-clamp-1">
-              {lastWeek?.summary}
-            </p>
-          </div>
-          <div className="w-10 h-10 rounded-xl bg-indigo-600 text-white flex items-center justify-center shrink-0 group-hover:translate-x-1 transition-transform shadow-xs">
-            <ArrowRight className="w-5 h-5" />
-          </div>
-        </div>
-
-        {/* Progress Card */}
-        <div className="p-6 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm flex items-center gap-4">
-          <div className="relative w-14 h-14 flex items-center justify-center shrink-0">
-            <svg className="w-full h-full -rotate-90" viewBox="0 0 36 36">
-              <path
-                className="text-slate-100 dark:text-slate-800"
-                strokeWidth="3.5"
-                stroke="currentColor"
-                fill="none"
-                d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
-              />
-              <path
-                className="text-indigo-600"
-                strokeDasharray={`${progressPercentage}, 100`}
-                strokeWidth="3.5"
-                strokeLinecap="round"
-                stroke="currentColor"
-                fill="none"
-                d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
-              />
-            </svg>
-            <span className="absolute text-xs font-bold text-slate-900 dark:text-slate-100 font-mono">
-              {progressPercentage}%
-            </span>
-          </div>
-          <div>
-            <div className="text-xs text-slate-500">Course Completion</div>
-            <div className="font-bold text-slate-900 dark:text-slate-100 text-sm mt-0.5">
-              {completedWeeks.length} of 13 Weeks
-            </div>
-          </div>
-        </div>
-
-        {/* Exam Weight Card */}
-        <div
-          onClick={() => onNavigate('/exam')}
-          className="cursor-pointer p-6 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm flex items-center gap-4 hover:border-slate-300 transition-colors"
-        >
-          <div className="w-12 h-12 rounded-xl bg-amber-50 dark:bg-amber-950/60 text-amber-600 flex items-center justify-center shrink-0 font-extrabold text-sm font-mono">
-            60%
-          </div>
-          <div>
-            <div className="text-xs text-slate-500">Term Final Exam</div>
-            <div className="font-bold text-slate-900 dark:text-slate-100 text-sm mt-0.5">
-              Exam Prep Hub →
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Hub Inventory Bar */}
+      {/* ── Stats Bar ── */}
       <section className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-center">
-        <div className="p-5 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-xs">
-          <div className="text-2xl sm:text-3xl font-extrabold text-indigo-600 dark:text-indigo-400 font-mono">
-            14
+        {[
+          { count: '14', label: 'Curriculum Weeks', color: 'text-indigo-600 dark:text-indigo-400' },
+          { count: '13', label: 'Lecture Slide Decks', color: 'text-violet-600 dark:text-violet-400' },
+          { count: '6', label: 'Course Notes & Handouts', color: 'text-teal-600 dark:text-teal-400' },
+          { count: '20', label: 'Interactive Visualizations', color: 'text-emerald-600 dark:text-emerald-400' },
+        ].map(({ count, label, color }) => (
+          <div
+            key={label}
+            className="p-5 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-xs"
+          >
+            <div className={`text-2xl sm:text-3xl font-extrabold font-mono ${color}`}>{count}</div>
+            <div className="text-xs font-medium text-slate-500 mt-1">{label}</div>
           </div>
-          <div className="text-xs font-medium text-slate-500 mt-1">Curriculum Weeks</div>
-        </div>
-
-        <div className="p-5 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-xs">
-          <div className="text-2xl sm:text-3xl font-extrabold text-violet-600 dark:text-violet-400 font-mono">
-            13
-          </div>
-          <div className="text-xs font-medium text-slate-500 mt-1">Lecture Slide Decks</div>
-        </div>
-
-        <div className="p-5 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-xs">
-          <div className="text-2xl sm:text-3xl font-extrabold text-teal-600 dark:text-teal-400 font-mono">
-            6
-          </div>
-          <div className="text-xs font-medium text-slate-500 mt-1">Course Notes & Handouts</div>
-        </div>
-
-        <div className="p-5 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-xs">
-          <div className="text-2xl sm:text-3xl font-extrabold text-amber-600 dark:text-amber-400 font-mono">
-            20
-          </div>
-          <div className="text-xs font-medium text-slate-500 mt-1">Interactive Labs</div>
-        </div>
+        ))}
       </section>
 
-      {/* Weekly Roadmap Preview (First 4 Weeks) */}
-      <section className="space-y-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <h2 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-slate-100">
-              Weekly Learning Journey
-            </h2>
-            <p className="text-xs sm:text-sm text-slate-500">
-              Start from the relational foundations and progress into transactions and cloud databases
-            </p>
-          </div>
-
-          <button
-            onClick={() => onNavigate('/weeks')}
-            className="inline-flex items-center gap-1.5 text-xs sm:text-sm font-semibold text-indigo-600 dark:text-indigo-400 hover:underline"
-          >
-            <span>View Full 14-Week Roadmap</span>
-            <ChevronRight className="w-4 h-4" />
-          </button>
+      {/* ── What is a DBMS? ── */}
+      <section className="rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-8 sm:p-12 shadow-sm space-y-8">
+        <div>
+          <span className="text-xs font-semibold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">
+            Foundations
+          </span>
+          <h2 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-slate-100 mt-1">
+            What is a Database Management System?
+          </h2>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          {previewWeeks.map((week) => (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+          <div className="space-y-4">
+            <p>
+              A <strong className="text-slate-900 dark:text-slate-100">DBMS</strong> is a software
+              system that provides a structured and reliable way to store, retrieve, and manage large
+              volumes of data. Unlike traditional file systems, a DBMS eliminates data redundancy,
+              enforces integrity constraints, and allows multiple users to access data concurrently
+              without conflicts.
+            </p>
+            <p>
+              The <strong className="text-slate-900 dark:text-slate-100">relational model</strong>{' '}
+              — introduced by E.F. Codd in 1970 — organizes data into tables (relations) of rows
+              (tuples) and columns (attributes), and uses keys to establish relationships between
+              entities. SQL (Structured Query Language) is the standard language for querying and
+              manipulating relational data.
+            </p>
+          </div>
+          <div className="space-y-4">
+            <p>
+              <strong className="text-slate-900 dark:text-slate-100">
+                Core properties (ACID)
+              </strong>{' '}
+              — Atomicity, Consistency, Isolation, and Durability — guarantee that transactions are
+              processed reliably, even in the face of system failures or concurrent access. These
+              properties underpin the correctness of every real-world transactional system.
+            </p>
+            <p>
+              Modern database systems extend beyond the relational model to include document stores,
+              column-family databases, graph databases, and time-series stores — each optimized for
+              different workload characteristics and query patterns.
+            </p>
+          </div>
+        </div>
+
+        {/* Key pillars */}
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 pt-2">
+          {[
+            { label: 'Relational Model', desc: 'Tables, keys & foreign-key integrity' },
+            { label: 'SQL', desc: 'DDL, DML, aggregations & joins' },
+            { label: 'Normalization', desc: '1NF → BCNF decomposition' },
+            { label: 'Indexing', desc: 'B+ trees & hashing strategies' },
+            { label: 'Transactions', desc: 'ACID, 2PL & serializability' },
+            { label: 'Recovery', desc: 'WAL, REDO/UNDO, ARIES' },
+          ].map(({ label, desc }) => (
             <div
-              key={week.id}
-              onClick={() => onNavigate(`/week/${week.id}`)}
-              className="cursor-pointer rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-5 shadow-sm hover:shadow-md hover:border-indigo-300 dark:hover:border-indigo-700 transition-all flex flex-col justify-between group"
+              key={label}
+              className="p-3.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/60 space-y-1"
             >
-              <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-bold font-mono text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/60 px-2.5 py-0.5 rounded-md">
-                    {week.label}
-                  </span>
-                  <div className="flex items-center gap-1 text-[11px] text-slate-400">
-                    {week.co.join(', ')}
-                  </div>
-                </div>
-
-                <h3 className="font-bold text-base text-slate-900 dark:text-slate-100 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors line-clamp-1">
-                  {week.title}
-                </h3>
-
-                <p className="text-xs text-slate-500 dark:text-slate-400 line-clamp-2 leading-relaxed">
-                  {week.summary}
-                </p>
-              </div>
-
-              <div className="pt-4 mt-4 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-xs text-slate-400">
-                <span>{week.decks[0]?.slides || 0} slides</span>
-                <span className="text-indigo-600 font-semibold group-hover:translate-x-1 transition-transform inline-flex items-center gap-1">
-                  Study <ArrowRight className="w-3.5 h-3.5" />
-                </span>
-              </div>
+              <div className="text-xs font-bold text-slate-900 dark:text-slate-100">{label}</div>
+              <div className="text-[11px] text-slate-500 dark:text-slate-400 leading-snug">{desc}</div>
             </div>
           ))}
         </div>
       </section>
 
-      {/* Quick Access Portals */}
-      <section className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {/* Notes Library */}
-        <div
-          onClick={() => onNavigate('/notes')}
-          className="cursor-pointer p-6 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm hover:border-slate-300 transition-colors space-y-3"
-        >
-          <div className="w-10 h-10 rounded-xl bg-blue-50 dark:bg-blue-950/60 text-blue-600 flex items-center justify-center">
-            <FileText className="w-5 h-5" />
-          </div>
-          <h3 className="font-bold text-base text-slate-900 dark:text-slate-100">
-            Notes Library
-          </h3>
-          <p className="text-xs text-slate-500 leading-relaxed">
-            All 6 lecture notes including ER Diagrams with 10 worked scenarios, SQL practice sheet, and Transactions handouts.
+      {/* ── Page Cards ── */}
+      <section className="space-y-6">
+        <div>
+          <h2 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-slate-100">
+            Explore the Study Portal
+          </h2>
+          <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
+            Everything you need for {courseData.code} — in one place.
           </p>
         </div>
 
-        {/* 20 Interactive Labs */}
-        <div
-          onClick={() => onNavigate('/labs')}
-          className="cursor-pointer p-6 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm hover:border-slate-300 transition-colors space-y-3"
-        >
-          <div className="w-10 h-10 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 flex items-center justify-center">
-            <Sparkles className="w-5 h-5" />
-          </div>
-          <h3 className="font-bold text-base text-slate-900 dark:text-slate-100">
-            20 Interactive DBMS Labs
-          </h3>
-          <p className="text-xs text-slate-500 leading-relaxed">
-            B+ Tree splits, Precedence graph cycle detection, Normalization 0NF→BCNF, RAID parity, and WAL log recovery.
-          </p>
-        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+          {pages.map((page) => {
+            const Icon = page.icon;
+            const c = colorMap[page.color];
+            return (
+              <div
+                key={page.path}
+                onClick={() => onNavigate(page.path)}
+                className={`cursor-pointer group rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-6 shadow-sm hover:shadow-md transition-all ${c.border}`}
+              >
+                <div className="flex items-start justify-between gap-4">
+                  <div className="space-y-3 flex-1">
+                    <div className="flex items-center gap-3">
+                      <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${c.icon}`}>
+                        <Icon className="w-5 h-5" />
+                      </div>
+                      <span className={`text-[11px] font-bold font-mono px-2 py-0.5 rounded ${c.badge}`}>
+                        {page.badge}
+                      </span>
+                    </div>
 
-        {/* Glossary */}
-        <div
-          onClick={() => onNavigate('/glossary')}
-          className="cursor-pointer p-6 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm hover:border-slate-300 transition-colors space-y-3"
-        >
-          <div className="w-10 h-10 rounded-xl bg-violet-50 dark:bg-violet-950/60 text-violet-600 flex items-center justify-center">
-            <BookOpen className="w-5 h-5" />
-          </div>
-          <h3 className="font-bold text-base text-slate-900 dark:text-slate-100">
-            60+ DBMS Glossary
-          </h3>
-          <p className="text-xs text-slate-500 leading-relaxed">
-            Instant A–Z definitions of core terms: 2PL, MVCC, ARIES, BCNF, closure (X+), ACID, and relational algebra.
-          </p>
+                    <div>
+                      <h3 className={`text-lg font-bold text-slate-900 dark:text-slate-100 transition-colors ${c.hover}`}>
+                        {page.title}
+                      </h3>
+                      <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1 leading-relaxed">
+                        {page.description}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className={`mt-1 shrink-0 ${c.arrow} group-hover:translate-x-1 transition-transform`}>
+                    <ChevronRight className="w-5 h-5" />
+                  </div>
+                </div>
+              </div>
+            );
+          })}
         </div>
       </section>
     </div>

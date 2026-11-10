@@ -78,7 +78,7 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
                   onClick={() => onNavigate('/labs')}
                   className="hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
                 >
-                  20 Interactive Labs
+                  20 Concept Visualizations
                 </button>
               </li>
               <li>
@@ -87,14 +87,6 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
                   className="hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
                 >
                   SQL Playground
-                </button>
-              </li>
-              <li>
-                <button
-                  onClick={() => onNavigate('/exam')}
-                  className="hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
-                >
-                  Exam Prep (Final 60%)
                 </button>
               </li>
               <li>
@@ -165,13 +157,6 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
             Built for BAUST CSE students · Summer 2026 Semester
           </div>
           <div className="flex items-center gap-4">
-            <button
-              onClick={() => onNavigate('/about')}
-              className="hover:text-slate-600 dark:hover:text-slate-200 transition-colors"
-            >
-              Course Information & Outline
-            </button>
-            <span aria-hidden="true">·</span>
             <a
               href="https://www.db-book.com/"
               target="_blank"

@@ -100,7 +100,7 @@ export const GlobalSearchModal: React.FC<GlobalSearchModalProps> = ({
             type="text"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search weeks, labs, notes, or 60+ DBMS terms..."
+            placeholder="Search weeks, visualizations, notes, or 60+ DBMS terms..."
             className="w-full bg-transparent text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none text-base"
           />
           {query ? (
@@ -182,11 +182,11 @@ export const GlobalSearchModal: React.FC<GlobalSearchModalProps> = ({
             </div>
           )}
 
-          {/* Labs */}
+          {/* Visualizations */}
           {results.labs.length > 0 && (
             <div>
               <div className="text-xs font-semibold uppercase tracking-wider text-slate-400 px-2 mb-1.5">
-                Interactive Concept Labs
+                Interactive Visualizations
               </div>
               <div className="space-y-1">
                 {results.labs.map((lab) => (

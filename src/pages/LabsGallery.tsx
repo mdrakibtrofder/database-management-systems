@@ -30,7 +30,7 @@ export const LabsGallery: React.FC<LabsGalleryProps> = ({ onNavigate }) => {
             Interactive Simulations
           </span>
           <h1 className="text-2xl sm:text-4xl font-extrabold text-slate-900 dark:text-slate-100 tracking-tight mt-1">
-            20 Interactive DBMS Concept Labs
+            20 Interactive DBMS Visualizations
           </h1>
           <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1 max-w-xl">
             Hands-on visualizers for the most challenging DBMS mechanisms: B+ tree rebalancing, schedule serializability, normalization, and recovery.
@@ -44,7 +44,7 @@ export const LabsGallery: React.FC<LabsGalleryProps> = ({ onNavigate }) => {
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search 20 interactive labs..."
+            placeholder="Search 20 visualizations..."
             className="w-full pl-9 pr-4 py-2 text-xs rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-1 focus:ring-indigo-500"
           />
         </div>

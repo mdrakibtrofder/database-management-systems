@@ -24,7 +24,7 @@ export const LabView: React.FC<LabViewProps> = ({ labId, onNavigate }) => {
           className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-500 hover:text-slate-900 dark:hover:text-white transition-colors"
         >
           <ArrowLeft className="w-4 h-4" />
-          <span>Back to All 20 Labs</span>
+          <span>Back to All Visualizations</span>
         </button>
 
         <div className="flex items-center gap-4 text-xs">

@@ -12,9 +12,7 @@ import { WeekDetail } from './pages/WeekDetail';
 import { NotesLibrary } from './pages/NotesLibrary';
 import { LabsGallery } from './pages/LabsGallery';
 import { LabView } from './pages/LabView';
-import { ExamPrep } from './pages/ExamPrep';
 import { Glossary } from './pages/Glossary';
-import { About } from './pages/About';
 
 function AppContent() {
   const { route, navigate } = useHashRouter();
@@ -63,16 +61,8 @@ function AppContent() {
       return <LabView labId={labId} onNavigate={navigate} />;
     }
 
-    if (path === '/exam') {
-      return <ExamPrep onNavigate={navigate} />;
-    }
-
     if (path === '/glossary') {
       return <Glossary onNavigate={navigate} />;
-    }
-
-    if (path === '/about') {
-      return <About onNavigate={navigate} />;
     }
 
     // Default fallback to Home

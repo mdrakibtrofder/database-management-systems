@@ -229,7 +229,7 @@ export const Roadmap: React.FC<RoadmapProps> = ({ onNavigate }) => {
                     )}
                     {week.labs.length > 0 && (
                       <div className="text-emerald-600 dark:text-emerald-400 font-medium">
-                        {week.labs.length} interactive {week.labs.length === 1 ? 'lab' : 'labs'}
+                        {week.labs.length} interactive {week.labs.length === 1 ? 'visualizer' : 'visualizers'}
                       </div>
                     )}
                   </div>
