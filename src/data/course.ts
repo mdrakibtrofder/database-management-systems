@@ -1903,6 +1903,12 @@ const rawCourseData: CourseData = {
 const withBase = (path: string): string =>
   path.startsWith('/') ? `${import.meta.env.BASE_URL}${path.slice(1)}` : path;
 
+// Slide images are exported per deck into /slides/images/<pptx-base-name>/slide-NN.png.
+const deckImageBase = (pptxPath: string): string => {
+  const name = pptxPath.split('/').pop()?.replace(/\.pptx$/i, '') ?? '';
+  return `/slides/images/${name}`;
+};
+
 export const courseData: CourseData = {
   ...rawCourseData,
   notes: rawCourseData.notes.map((note) => ({ ...note, file: withBase(note.file) })),
@@ -1913,6 +1919,7 @@ export const courseData: CourseData = {
       pdf: withBase(deck.pdf),
       pptx: withBase(deck.pptx),
       thumb: withBase(deck.thumb),
+      images: withBase(deckImageBase(deck.pptx)),
     })),
   })),
 };

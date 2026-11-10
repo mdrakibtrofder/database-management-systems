@@ -11,6 +11,7 @@ import {
   FileText,
   AlertCircle,
   UploadCloud,
+  ExternalLink,
 } from 'lucide-react';
 import { SlideDeck } from '../../types';
 import { useProgress } from '../../context/ProgressContext';
@@ -71,6 +72,9 @@ export const SlideViewer: React.FC<SlideViewerProps> = ({
   const [customPdfUrl, setCustomPdfUrl] = useState<string | null>(null);
   const [pdfDoc, setPdfDoc] = useState<any>(null);
 
+  // Image-sequence rendering (preferred: renders the real exported slides)
+  const [imageFailed, setImageFailed] = useState<boolean>(false);
+
   // Parsed PPTX slide content: array of slides, each slide is an array of text paragraphs
   const [pptSlides, setPptSlides] = useState<string[][]>([]);
   const [actualTotalPages, setActualTotalPages] = useState<number>(deck.slides);
@@ -83,7 +87,7 @@ export const SlideViewer: React.FC<SlideViewerProps> = ({
   const totalPages = actualTotalPages || deck.slides;
   const isPageBookmarked = isBookmarked(weekId, currentPage);
 
-  // ── Load presentation: try PPTX (JSZip parse) first, then PDF (PDF.js) ──
+  // ── Load presentation: prefer exported slide images, else PPTX text, else PDF.js ──
   useEffect(() => {
     let isCancelled = false;
     setIsLoading(true);
@@ -94,6 +98,16 @@ export const SlideViewer: React.FC<SlideViewerProps> = ({
 
     const pdfTarget = customPdfUrl || deck.pdf;
     const pptxTarget = deck.pptx;
+
+    // Preferred path: static PNG slides exported per deck. Nothing to fetch up-front;
+    // the <img> element reports failure via onError.
+    const useImages = !!deck.images && !customPdfUrl && !imageFailed;
+    if (useImages) {
+      setIsLoading(false);
+      return () => {
+        isCancelled = true;
+      };
+    }
 
     // Try PPTX: parse with JSZip to extract slide text content
     const tryPptx = async (): Promise<boolean> => {
@@ -180,7 +194,13 @@ export const SlideViewer: React.FC<SlideViewerProps> = ({
       isCancelled = true;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [deck.pdf, deck.pptx, customPdfUrl]);
+  }, [deck.images, deck.pdf, deck.pptx, customPdfUrl, imageFailed]);
+
+  // ── Reset to first page and clear any image failure when the deck changes ──
+  useEffect(() => {
+    setCurrentPage(1);
+    setImageFailed(false);
+  }, [deck.id]);
 
   // ── Render PDF page onto canvas (PDF.js) ──
   useEffect(() => {
@@ -231,11 +251,6 @@ export const SlideViewer: React.FC<SlideViewerProps> = ({
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [totalPages]);
 
-  // ── Reset to first page when deck changes ──
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [deck.id]);
-
   const toggleBookmark = () => {
     if (isPageBookmarked) {
       const existing = bookmarks.find((b) => b.weekId === weekId && b.page === currentPage);
@@ -272,9 +287,14 @@ export const SlideViewer: React.FC<SlideViewerProps> = ({
     return deck.sections[index];
   };
 
-  const isPptx = pptSlides.length > 0;
-  const isPdf = !isPptx && !!pdfDoc;
-  const hasRenderable = isPptx || isPdf;
+  const showImages = !!deck.images && !customPdfUrl && !imageFailed;
+  const isPptx = !showImages && pptSlides.length > 0;
+  const isPdf = !showImages && !isPptx && !!pdfDoc;
+  const hasRenderable = showImages || isPptx || isPdf;
+
+  // Path of the exported PNG for a given slide, e.g. .../slide-07.png
+  const imageSrc = (page: number) =>
+    `${deck.images}/slide-${String(page).padStart(2, '0')}.png`;
 
   // Current slide's parsed text paragraphs
   const currentSlideParagraphs = pptSlides[currentPage - 1] || [];
@@ -355,15 +375,26 @@ export const SlideViewer: React.FC<SlideViewerProps> = ({
             <span>PPTX</span>
           </a>
           {deck.pdf && (
-            <a
-              href={deck.pdf}
-              download
-              className="inline-flex items-center gap-1 px-2.5 py-1 text-indigo-300 hover:text-white bg-indigo-950/70 hover:bg-indigo-900 border border-indigo-800/60 rounded transition-colors"
-              title="Download PDF"
-            >
-              <Download className="w-3.5 h-3.5" />
-              <span>PDF</span>
-            </a>
+            <>
+              <a
+                href={deck.pdf}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1 px-2.5 py-1 text-indigo-300 hover:text-white bg-indigo-950/70 hover:bg-indigo-900 border border-indigo-800/60 rounded transition-colors"
+                title="Open PDF in a new tab"
+              >
+                <ExternalLink className="w-3.5 h-3.5" />
+                <span>Open PDF</span>
+              </a>
+              <a
+                href={deck.pdf}
+                download
+                className="inline-flex items-center gap-1 px-2 py-1 text-indigo-300 hover:text-white bg-indigo-950/70 hover:bg-indigo-900 border border-indigo-800/60 rounded transition-colors"
+                title="Download PDF"
+              >
+                <Download className="w-3.5 h-3.5" />
+              </a>
+            </>
           )}
         </div>
       </div>
@@ -376,6 +407,29 @@ export const SlideViewer: React.FC<SlideViewerProps> = ({
               <FileText className="w-6 h-6 text-indigo-400" />
             </div>
             <p className="text-sm">Loading slide presentation...</p>
+          </div>
+        )}
+
+        {/* Exported slide images: the real rendered slide contents */}
+        {!isLoading && showImages && (
+          <div
+            className="shadow-2xl rounded-lg overflow-hidden bg-white max-w-full transition-all"
+            style={{ transform: `scale(${zoom})`, transformOrigin: 'center center' }}
+          >
+            <img
+              key={`${deck.id}-${currentPage}`}
+              src={imageSrc(currentPage)}
+              alt={`${deck.title} — slide ${currentPage} of ${totalPages}`}
+              className="block max-w-full h-auto max-h-[70vh] object-contain mx-auto"
+              onError={() => setImageFailed(true)}
+            />
+            {/* Preload neighbours for smoother navigation */}
+            {currentPage < totalPages && (
+              <img src={imageSrc(currentPage + 1)} alt="" aria-hidden="true" className="hidden" />
+            )}
+            {currentPage > 1 && (
+              <img src={imageSrc(currentPage - 1)} alt="" aria-hidden="true" className="hidden" />
+            )}
           </div>
         )}
 

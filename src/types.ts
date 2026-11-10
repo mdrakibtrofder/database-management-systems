@@ -21,6 +21,8 @@ export interface SlideDeck {
   pdf: string;
   pptx: string;
   thumb: string;
+  /** Base path of the exported per-slide PNG images, e.g. /slides/images/Week_1_Introduction_to_DBMS */
+  images?: string;
   slides: number;
   size: string;
   sections: string[];
