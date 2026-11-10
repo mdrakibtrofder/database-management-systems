@@ -10,6 +10,7 @@ import { Home } from './pages/Home';
 import { Roadmap } from './pages/Roadmap';
 import { WeekDetail } from './pages/WeekDetail';
 import { NotesLibrary } from './pages/NotesLibrary';
+import { SlidesLibrary } from './pages/SlidesLibrary';
 import { LabsGallery } from './pages/LabsGallery';
 import { LabView } from './pages/LabView';
 import { Glossary } from './pages/Glossary';
@@ -46,6 +47,10 @@ function AppContent() {
       const weekId = parseInt(params.id || '1', 10);
       const initialPage = queryParams.page ? parseInt(queryParams.page, 10) : 1;
       return <WeekDetail weekId={weekId} initialPage={initialPage} onNavigate={navigate} />;
+    }
+
+    if (path === '/slides') {
+      return <SlidesLibrary onNavigate={navigate} />;
     }
 
     if (path === '/notes') {

@@ -23,6 +23,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   const navLinks = [
     { label: 'Home', path: '/' },
     { label: 'Roadmap', path: '/weeks' },
+    { label: 'Slides', path: '/slides' },
     { label: 'Notes', path: '/notes' },
     { label: 'Visualizations', path: '/labs' },
     { label: 'Glossary', path: '/glossary' },

@@ -309,7 +309,7 @@ export const courseData: CourseData = {
       id: 'basics-normalization',
       title: 'Database Basics and Normalization Lecture Note',
       fileName: 'CSE_2205_Database_Basics_and_Normalization_Note.pdf',
-      file: '/assets/notes/pdf/CSE_2205_Database_Basics_and_Normalization_Note.pdf',
+      file: '/notes/CSE_2205_Database_Basics_and_Normalization_Note.pdf',
       pages: 27,
       size: '29.2 MB (Light: 7.8 MB)',
       weeks: [1, 4],
@@ -321,7 +321,7 @@ export const courseData: CourseData = {
       id: 'er',
       title: 'ER Diagrams: Teaching Guide with 10 Worked Scenarios',
       fileName: 'CSE_2205_ER_Diagrams_Note.pdf',
-      file: '/assets/notes/pdf/CSE_2205_ER_Diagrams_Note.pdf',
+      file: '/notes/CSE_2205_ER_Diagrams_Note.pdf',
       pages: 14,
       size: '1.0 MB',
       weeks: [2, 3],
@@ -332,7 +332,7 @@ export const courseData: CourseData = {
       id: 'sql-practice',
       title: 'SQL Practice Sheet: Department & Student Schema',
       fileName: 'CSE_2205_SQL_Practice_Note.pdf',
-      file: '/assets/notes/pdf/CSE_2205_SQL_Practice_Note.pdf',
+      file: '/notes/CSE_2205_SQL_Practice_Note.pdf',
       pages: 5,
       size: '0.4 MB',
       weeks: [5, 6],
@@ -343,7 +343,7 @@ export const courseData: CourseData = {
       id: 'transactions',
       title: 'Transactions & Conflict Serializability Lecture Note',
       fileName: 'CSE_2205_Transactions_Note.pdf',
-      file: '/assets/notes/pdf/CSE_2205_Transactions_Note.pdf',
+      file: '/notes/CSE_2205_Transactions_Note.pdf',
       pages: 6,
       size: '0.5 MB',
       weeks: [8],
@@ -354,7 +354,7 @@ export const courseData: CourseData = {
       id: 'transactions-practice',
       title: 'Transactions Practice Handout (Problems & Worked Solutions)',
       fileName: 'CSE_2205_Transactions_Practice_Note.pdf',
-      file: '/assets/notes/pdf/CSE_2205_Transactions_Practice_Note.pdf',
+      file: '/notes/CSE_2205_Transactions_Practice_Note.pdf',
       pages: 6,
       size: '0.6 MB',
       weeks: [8, 10],
@@ -365,7 +365,7 @@ export const courseData: CourseData = {
       id: 'exam-questions',
       title: "Previous Years' Final Exam Question Papers",
       fileName: 'CSE_2205_Previous_Years_Final_Questions.pdf',
-      file: '/assets/notes/pdf/CSE_2205_Previous_Years_Final_Questions.pdf',
+      file: '/notes/CSE_2205_Previous_Years_Final_Questions.pdf',
       pages: 18,
       size: '1.2 MB',
       weeks: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 12, 13, 14],
@@ -396,9 +396,9 @@ export const courseData: CourseData = {
         {
           id: 'deck-1',
           title: 'Introduction to DBMS',
-          pdf: '/assets/slides/pdf/week-01-introduction-to-dbms.pdf',
-          pptx: '/assets/slides/pptx/Week_1_Introduction_to_DBMS.pptx',
-          thumb: '/assets/slides/thumbs/week-01.webp',
+          pdf: '/slides/pdf/week-01-introduction-to-dbms.pdf',
+          pptx: '/slides/Week_1_Introduction_to_DBMS.pptx',
+          thumb: '/slides/thumbs/week-01.webp',
           slides: 9,
           size: '0.9 MB',
           sections: [
@@ -502,9 +502,9 @@ export const courseData: CourseData = {
         {
           id: 'deck-2',
           title: 'ER Modeling and Schema Design',
-          pdf: '/assets/slides/pdf/week-02-er-modeling-and-schema-design.pdf',
-          pptx: '/assets/slides/pptx/Week_2_ER_Modeling_and_Schema_Design.pptx',
-          thumb: '/assets/slides/thumbs/week-02.webp',
+          pdf: '/slides/pdf/week-02-er-modeling-and-schema-design.pdf',
+          pptx: '/slides/Week_2_ER_Modeling_and_Schema_Design.pptx',
+          thumb: '/slides/thumbs/week-02.webp',
           slides: 9,
           size: '1.1 MB',
           sections: [
@@ -608,9 +608,9 @@ export const courseData: CourseData = {
         {
           id: 'deck-3a',
           title: 'Deck A: Relational Algebra',
-          pdf: '/assets/slides/pdf/week-03-relational-algebra.pdf',
-          pptx: '/assets/slides/pptx/Week_3_Relational_Algebra.pptx',
-          thumb: '/assets/slides/thumbs/week-03-a.webp',
+          pdf: '/slides/pdf/week-03-relational-algebra.pdf',
+          pptx: '/slides/Week_3_Relational_Algebra.pptx',
+          thumb: '/slides/thumbs/week-03-a.webp',
           slides: 8,
           size: '0.9 MB',
           sections: [
@@ -626,9 +626,9 @@ export const courseData: CourseData = {
         {
           id: 'deck-3b',
           title: 'Deck B: ER Keys, Set Operations & Joins',
-          pdf: '/assets/slides/pdf/week-03-er-keys-set-operations-joins.pdf',
-          pptx: '/assets/slides/pptx/Week_3_ER_Keys_Set_Operations_Joins.pptx',
-          thumb: '/assets/slides/thumbs/week-03-b.webp',
+          pdf: '/slides/pdf/week-03-er-keys-set-operations-joins.pdf',
+          pptx: '/slides/Week_3_ER_Keys_Set_Operations_Joins.pptx',
+          thumb: '/slides/thumbs/week-03-b.webp',
           slides: 11,
           size: '1.2 MB',
           sections: [
@@ -727,9 +727,9 @@ export const courseData: CourseData = {
         {
           id: 'deck-4',
           title: 'Database Normalization',
-          pdf: '/assets/slides/pdf/week-04-database-normalization.pdf',
-          pptx: '/assets/slides/pptx/Week_4_Database_Normalization.pptx',
-          thumb: '/assets/slides/thumbs/week-04.webp',
+          pdf: '/slides/pdf/week-04-database-normalization.pdf',
+          pptx: '/slides/Week_4_Database_Normalization.pptx',
+          thumb: '/slides/thumbs/week-04.webp',
           slides: 14,
           size: '1.4 MB',
           sections: [
@@ -835,9 +835,9 @@ export const courseData: CourseData = {
         {
           id: 'deck-5',
           title: 'SQL Basics',
-          pdf: '/assets/slides/pdf/week-05-sql-basics.pdf',
-          pptx: '/assets/slides/pptx/Week_5_SQL_Basics.pptx',
-          thumb: '/assets/slides/thumbs/week-05.webp',
+          pdf: '/slides/pdf/week-05-sql-basics.pdf',
+          pptx: '/slides/Week_5_SQL_Basics.pptx',
+          thumb: '/slides/thumbs/week-05.webp',
           slides: 11,
           size: '1.0 MB',
           sections: [
@@ -935,9 +935,9 @@ export const courseData: CourseData = {
         {
           id: 'deck-6',
           title: 'Advanced SQL',
-          pdf: '/assets/slides/pdf/week-06-sql-advanced.pdf',
-          pptx: '/assets/slides/pptx/Week_6_SQL_Advanced.pptx',
-          thumb: '/assets/slides/thumbs/week-06.webp',
+          pdf: '/slides/pdf/week-06-sql-advanced.pdf',
+          pptx: '/slides/Week_6_SQL_Advanced.pptx',
+          thumb: '/slides/thumbs/week-06.webp',
           slides: 11,
           size: '1.1 MB',
           sections: [
@@ -1048,9 +1048,9 @@ export const courseData: CourseData = {
         {
           id: 'deck-7',
           title: 'Indexing and B+ Trees',
-          pdf: '/assets/slides/pdf/week-07-indexing-and-btrees.pdf',
-          pptx: '/assets/slides/pptx/Week_7_Indexing_and_BTrees.pptx',
-          thumb: '/assets/slides/thumbs/week-07.webp',
+          pdf: '/slides/pdf/week-07-indexing-and-btrees.pdf',
+          pptx: '/slides/Week_7_Indexing_and_BTrees.pptx',
+          thumb: '/slides/thumbs/week-07.webp',
           slides: 18,
           size: '0.8 MB',
           sections: [
@@ -1169,9 +1169,9 @@ export const courseData: CourseData = {
         {
           id: 'deck-8',
           title: 'Transactions in DBMS',
-          pdf: '/assets/slides/pdf/week-08-transactions-in-dbms.pdf',
-          pptx: '/assets/slides/pptx/Week_8_Transactions_in_DBMS.pptx',
-          thumb: '/assets/slides/thumbs/week-08.webp',
+          pdf: '/slides/pdf/week-08-transactions-in-dbms.pdf',
+          pptx: '/slides/Week_8_Transactions_in_DBMS.pptx',
+          thumb: '/slides/thumbs/week-08.webp',
           slides: 33,
           size: '1.8 MB',
           sections: [
@@ -1284,9 +1284,9 @@ export const courseData: CourseData = {
         {
           id: 'deck-9',
           title: 'Physical Storage Systems and RAID',
-          pdf: '/assets/slides/pdf/week-09-physical-storage-systems-and-raid.pdf',
-          pptx: '/assets/slides/pptx/Week_9_Physical_Storage_Systems_and_RAID.pptx',
-          thumb: '/assets/slides/thumbs/week-09.webp',
+          pdf: '/slides/pdf/week-09-physical-storage-systems-and-raid.pdf',
+          pptx: '/slides/Week_9_Physical_Storage_Systems_and_RAID.pptx',
+          thumb: '/slides/thumbs/week-09.webp',
           slides: 9,
           size: '0.8 MB',
           sections: [
@@ -1388,9 +1388,9 @@ export const courseData: CourseData = {
         {
           id: 'deck-10',
           title: 'Concurrency, Deadlock and Recovery',
-          pdf: '/assets/slides/pdf/week-10-11-concurrency-deadlock-and-recovery.pdf',
-          pptx: '/assets/slides/pptx/Week_10_11_Concurrency_Deadlock_and_Recovery.pptx',
-          thumb: '/assets/slides/thumbs/week-10.webp',
+          pdf: '/slides/pdf/week-10-11-concurrency-deadlock-and-recovery.pdf',
+          pptx: '/slides/Week_10_11_Concurrency_Deadlock_and_Recovery.pptx',
+          thumb: '/slides/thumbs/week-10.webp',
           slides: 24,
           size: '1.5 MB',
           sections: [
@@ -1510,9 +1510,9 @@ export const courseData: CourseData = {
         {
           id: 'deck-12',
           title: 'Types of Databases',
-          pdf: '/assets/slides/pdf/week-12-types-of-databases.pdf',
-          pptx: '/assets/slides/pptx/Week_12_Types of Databases.pptx',
-          thumb: '/assets/slides/thumbs/week-12.webp',
+          pdf: '/slides/pdf/week-12-types-of-databases.pdf',
+          pptx: '/slides/Week_12_Types of Databases.pptx',
+          thumb: '/slides/thumbs/week-12.webp',
           slides: 13,
           size: '1.2 MB',
           sections: [
@@ -1619,9 +1619,9 @@ export const courseData: CourseData = {
         {
           id: 'deck-13',
           title: 'Emerging Topics',
-          pdf: '/assets/slides/pdf/week-13-emerging-topics.pdf',
-          pptx: '/assets/slides/pptx/Week_13_Emerging_Topics.pptx',
-          thumb: '/assets/slides/thumbs/week-13.webp',
+          pdf: '/slides/pdf/week-13-emerging-topics.pdf',
+          pptx: '/slides/Week_13_Emerging_Topics.pptx',
+          thumb: '/slides/thumbs/week-13.webp',
           slides: 12,
           size: '1.3 MB',
           sections: [

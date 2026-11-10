@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState, useCallback } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   ChevronLeft,
   ChevronRight,
@@ -9,10 +9,8 @@ import {
   Bookmark,
   Download,
   FileText,
-  UploadCloud,
-  Check,
   AlertCircle,
-  ExternalLink,
+  UploadCloud,
 } from 'lucide-react';
 import { SlideDeck } from '../../types';
 import { useProgress } from '../../context/ProgressContext';
@@ -24,6 +22,39 @@ interface SlideViewerProps {
   initialPage?: number;
 }
 
+// Parse a slide XML string and extract text paragraphs
+const parseSlideXml = (xml: string): string[] => {
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(xml, 'text/xml');
+
+  // PowerPoint text runs are in <a:t> elements inside <a:p> paragraphs
+  // We extract paragraphs, each paragraph may have multiple text runs
+  const paragraphs: string[] = [];
+  const pElements = doc.getElementsByTagName('a:p');
+
+  for (let i = 0; i < pElements.length; i++) {
+    const p = pElements[i];
+    const tElements = p.getElementsByTagName('a:t');
+    let text = '';
+    for (let j = 0; j < tElements.length; j++) {
+      text += tElements[j].textContent || '';
+    }
+    const trimmed = text.trim();
+    if (trimmed) {
+      paragraphs.push(trimmed);
+    }
+  }
+
+  return paragraphs;
+};
+
+// Sort slide files numerically: slide1.xml, slide2.xml, ..., slide10.xml
+const sortSlideFiles = (a: string, b: string): number => {
+  const numA = parseInt(a.match(/slide(\d+)\.xml/)?.[1] || '0', 10);
+  const numB = parseInt(b.match(/slide(\d+)\.xml/)?.[1] || '0', 10);
+  return numA - numB;
+};
+
 export const SlideViewer: React.FC<SlideViewerProps> = ({
   deck,
   weekId,
@@ -33,35 +64,80 @@ export const SlideViewer: React.FC<SlideViewerProps> = ({
   const [currentPage, setCurrentPage] = useState<number>(initialPage);
   const [zoom, setZoom] = useState<number>(1);
   const [isFullscreen, setIsFullscreen] = useState<boolean>(false);
+
+  // Rendering state
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [loadError, setLoadError] = useState<boolean>(false);
   const [customPdfUrl, setCustomPdfUrl] = useState<string | null>(null);
-  const [hasPdfJsError, setHasPdfJsError] = useState<boolean>(false);
-  const [isLoadingPdf, setIsLoadingPdf] = useState<boolean>(true);
   const [pdfDoc, setPdfDoc] = useState<any>(null);
+
+  // Parsed PPTX slide content: array of slides, each slide is an array of text paragraphs
+  const [pptSlides, setPptSlides] = useState<string[][]>([]);
   const [actualTotalPages, setActualTotalPages] = useState<number>(deck.slides);
 
+  const pdfCanvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
-  const canvasRef = useRef<HTMLCanvasElement>(null);
+
   const { isBookmarked, addBookmark, removeBookmark, bookmarks } = useProgress();
 
-  const totalPages = pdfDoc ? actualTotalPages : deck.slides;
+  const totalPages = actualTotalPages || deck.slides;
   const isPageBookmarked = isBookmarked(weekId, currentPage);
 
-  // Load PDF with PDF.js if available
+  // ── Load presentation: try PPTX (JSZip parse) first, then PDF (PDF.js) ──
   useEffect(() => {
     let isCancelled = false;
-    setIsLoadingPdf(true);
-    setHasPdfJsError(false);
+    setIsLoading(true);
+    setLoadError(false);
+    setPdfDoc(null);
+    setPptSlides([]);
+    setActualTotalPages(deck.slides);
 
     const pdfTarget = customPdfUrl || deck.pdf;
+    const pptxTarget = deck.pptx;
 
-    const loadPdf = async () => {
-      // @ts-ignore
-      const pdfjsLib = window.pdfjsLib;
-      if (!pdfjsLib) {
-        setHasPdfJsError(true);
-        setIsLoadingPdf(false);
-        return;
+    // Try PPTX: parse with JSZip to extract slide text content
+    const tryPptx = async (): Promise<boolean> => {
+      // @ts-ignore - JSZip loaded via CDN
+      const JSZip = (window as any).JSZip;
+      if (!JSZip) return false;
+
+      try {
+        const response = await fetch(pptxTarget);
+        if (!response.ok) return false;
+        const arrayBuffer = await response.arrayBuffer();
+
+        const zip = await JSZip.loadAsync(arrayBuffer);
+
+        // Find all slide XML files
+        const slideFiles = Object.keys(zip.files)
+          .filter((name) => /^ppt\/slides\/slide\d+\.xml$/.test(name))
+          .sort(sortSlideFiles);
+
+        if (slideFiles.length === 0) return false;
+
+        // Parse each slide's text content
+        const slides: string[][] = [];
+        for (const file of slideFiles) {
+          const content = await zip.file(file).async('string');
+          const paragraphs = parseSlideXml(content);
+          slides.push(paragraphs);
+        }
+
+        if (isCancelled) return false;
+
+        setPptSlides(slides);
+        setActualTotalPages(slides.length || deck.slides);
+        return true;
+      } catch {
+        return false;
       }
+    };
+
+    // Fallback to PDF via PDF.js
+    const tryPdf = async (): Promise<boolean> => {
+      // @ts-ignore
+      const pdfjsLib = (window as any).pdfjsLib;
+      if (!pdfjsLib) return false;
 
       try {
         const loadingTask = pdfjsLib.getDocument({
@@ -69,44 +145,56 @@ export const SlideViewer: React.FC<SlideViewerProps> = ({
           cMapUrl: 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/cmaps/',
           cMapPacked: true,
         });
-
         const doc = await loadingTask.promise;
-        if (!isCancelled) {
-          setPdfDoc(doc);
-          setActualTotalPages(doc.numPages);
-          setIsLoadingPdf(false);
-          setHasPdfJsError(false);
-        }
-      } catch (err) {
-        // PDF not yet attached in folder - gracefully fallback to interactive slide generator
-        if (!isCancelled) {
-          setPdfDoc(null);
-          setHasPdfJsError(true);
-          setIsLoadingPdf(false);
-        }
+        if (isCancelled) return false;
+        setPdfDoc(doc);
+        setActualTotalPages(doc.numPages);
+        return true;
+      } catch {
+        return false;
       }
     };
 
-    loadPdf();
+    const load = async () => {
+      const pptxOk = await tryPptx();
+      if (isCancelled) return;
+      if (pptxOk) {
+        setIsLoading(false);
+        return;
+      }
+
+      const pdfOk = await tryPdf();
+      if (isCancelled) return;
+      if (pdfOk) {
+        setIsLoading(false);
+        return;
+      }
+
+      setLoadError(true);
+      setIsLoading(false);
+    };
+
+    load();
 
     return () => {
       isCancelled = true;
     };
-  }, [deck.pdf, customPdfUrl]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [deck.pdf, deck.pptx, customPdfUrl]);
 
-  // Render current page onto canvas if pdfDoc exists
+  // ── Render PDF page onto canvas (PDF.js) ──
   useEffect(() => {
-    if (!pdfDoc || !canvasRef.current) return;
+    if (!pdfDoc || !pdfCanvasRef.current) return;
 
     let renderTask: any = null;
 
     const renderPage = async () => {
       try {
         const page = await pdfDoc.getPage(currentPage);
-        const canvas = canvasRef.current;
+        const canvas = pdfCanvasRef.current;
         if (!canvas) return;
 
-        const viewport = page.getViewport({ scale: 1.5 * zoom });
+        const viewport = page.getViewport({ scale: 1.4 * zoom });
         canvas.height = viewport.height;
         canvas.width = viewport.width;
 
@@ -117,7 +205,7 @@ export const SlideViewer: React.FC<SlideViewerProps> = ({
 
         renderTask = page.render(renderContext);
         await renderTask.promise;
-      } catch (err) {
+      } catch {
         // ignore canceled render
       }
     };
@@ -125,39 +213,35 @@ export const SlideViewer: React.FC<SlideViewerProps> = ({
     renderPage();
 
     return () => {
-      if (renderTask) {
-        renderTask.cancel();
-      }
+      if (renderTask) renderTask.cancel();
     };
   }, [pdfDoc, currentPage, zoom]);
 
-  // Keyboard navigation
+  // ── Keyboard navigation ──
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
-
       if (e.key === 'ArrowRight' || e.key === 'PageDown') {
         setCurrentPage((p) => Math.min(totalPages, p + 1));
       } else if (e.key === 'ArrowLeft' || e.key === 'PageUp') {
         setCurrentPage((p) => Math.max(1, p - 1));
       }
     };
-
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [totalPages]);
+
+  // ── Reset to first page when deck changes ──
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [deck.id]);
 
   const toggleBookmark = () => {
     if (isPageBookmarked) {
       const existing = bookmarks.find((b) => b.weekId === weekId && b.page === currentPage);
       if (existing) removeBookmark(existing.id);
     } else {
-      addBookmark({
-        weekId,
-        weekTitle,
-        deckTitle: deck.title,
-        page: currentPage,
-      });
+      addBookmark({ weekId, weekTitle, deckTitle: deck.title, page: currentPage });
     }
   };
 
@@ -181,13 +265,19 @@ export const SlideViewer: React.FC<SlideViewerProps> = ({
     }
   };
 
-  // Content for the interactive slide preview when PDF hasn't been placed on disk yet
   const getSectionTitle = (page: number) => {
     const secCount = deck.sections.length;
     if (secCount === 0) return 'Slide Content';
     const index = Math.min(secCount - 1, Math.floor(((page - 1) / totalPages) * secCount));
     return deck.sections[index];
   };
+
+  const isPptx = pptSlides.length > 0;
+  const isPdf = !isPptx && !!pdfDoc;
+  const hasRenderable = isPptx || isPdf;
+
+  // Current slide's parsed text paragraphs
+  const currentSlideParagraphs = pptSlides[currentPage - 1] || [];
 
   return (
     <div
@@ -208,7 +298,6 @@ export const SlideViewer: React.FC<SlideViewerProps> = ({
           </span>
         </div>
 
-        {/* Toolbar Controls */}
         <div className="flex items-center gap-1.5 sm:gap-2">
           {/* Zoom */}
           <button
@@ -265,21 +354,23 @@ export const SlideViewer: React.FC<SlideViewerProps> = ({
             <Download className="w-3.5 h-3.5" />
             <span>PPTX</span>
           </a>
-          <a
-            href={deck.pdf}
-            download
-            className="inline-flex items-center gap-1 px-2.5 py-1 text-indigo-300 hover:text-white bg-indigo-950/70 hover:bg-indigo-900 border border-indigo-800/60 rounded transition-colors"
-            title="Download PDF"
-          >
-            <Download className="w-3.5 h-3.5" />
-            <span>PDF</span>
-          </a>
+          {deck.pdf && (
+            <a
+              href={deck.pdf}
+              download
+              className="inline-flex items-center gap-1 px-2.5 py-1 text-indigo-300 hover:text-white bg-indigo-950/70 hover:bg-indigo-900 border border-indigo-800/60 rounded transition-colors"
+              title="Download PDF"
+            >
+              <Download className="w-3.5 h-3.5" />
+              <span>PDF</span>
+            </a>
+          )}
         </div>
       </div>
 
       {/* Main Slide Presentation Stage */}
       <div className="relative flex-1 flex items-center justify-center p-4 sm:p-8 bg-slate-950 overflow-auto min-h-[420px] sm:min-h-[500px]">
-        {isLoadingPdf && (
+        {isLoading && (
           <div className="flex flex-col items-center gap-3 text-slate-400 animate-pulse">
             <div className="w-12 h-12 rounded-xl bg-slate-800 flex items-center justify-center">
               <FileText className="w-6 h-6 text-indigo-400" />
@@ -288,20 +379,67 @@ export const SlideViewer: React.FC<SlideViewerProps> = ({
           </div>
         )}
 
-        {/* Real PDF Canvas (rendered if PDF file is found) */}
-        {!isLoadingPdf && pdfDoc && (
-          <div className="shadow-2xl rounded-lg overflow-hidden bg-white max-w-full">
-            <canvas ref={canvasRef} className="max-w-full h-auto block" />
+        {/* PPTX content: parsed text slides rendered as styled slides */}
+        {!isLoading && isPptx && (
+          <div
+            className="relative w-full max-w-4xl aspect-[16/9] bg-white text-slate-900 rounded-xl shadow-2xl p-6 sm:p-10 flex flex-col overflow-hidden transition-all"
+            style={{ transform: `scale(${zoom})`, transformOrigin: 'center center' }}
+          >
+            {/* Slide Header */}
+            <div className="flex items-center justify-between text-xs text-slate-400 mb-4 border-b border-slate-100 pb-3">
+              <span className="font-semibold text-indigo-600">
+                CSE 2205 · {weekTitle}
+              </span>
+              <span className="font-mono bg-slate-100 px-2 py-0.5 rounded text-slate-500">
+                Slide {currentPage} of {totalPages}
+              </span>
+            </div>
+
+            {/* Slide Title (first paragraph) */}
+            {currentSlideParagraphs.length > 0 && (
+              <h2 className="text-xl sm:text-2xl font-extrabold tracking-tight text-slate-900 mb-4 line-clamp-2">
+                {currentSlideParagraphs[0]}
+              </h2>
+            )}
+
+            {/* Slide Body (remaining paragraphs) */}
+            <div className="flex-1 overflow-auto space-y-2.5 pr-1">
+              {currentSlideParagraphs.slice(1).map((para, idx) => (
+                <p
+                  key={idx}
+                  className="text-sm sm:text-base leading-relaxed text-slate-700"
+                >
+                  {para}
+                </p>
+              ))}
+              {currentSlideParagraphs.length === 0 && (
+                <p className="text-sm text-slate-400 italic">
+                  (This slide contains images or shapes without text.)
+                </p>
+              )}
+            </div>
+
+            {/* Slide Footer */}
+            <div className="pt-3 mt-3 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-400">
+              <span>Dept. of Computer Science &amp; Engineering · BAUST</span>
+              <span>{deck.title}</span>
+            </div>
           </div>
         )}
 
-        {/* Interactive Structured Slide Preview Deck (rendered when PDF is pending upload) */}
-        {!isLoadingPdf && !pdfDoc && (
+        {/* PDF Canvas (PDF.js) */}
+        {!isLoading && isPdf && (
+          <div className="shadow-2xl rounded-lg overflow-hidden bg-white max-w-full">
+            <canvas ref={pdfCanvasRef} className="max-w-full h-auto block" />
+          </div>
+        )}
+
+        {/* Fallback: structured interactive slide preview */}
+        {!isLoading && !hasRenderable && (
           <div
             className="relative w-full max-w-4xl aspect-[16/9] bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 rounded-xl shadow-2xl p-6 sm:p-12 flex flex-col justify-between border border-slate-200 dark:border-slate-800 transition-all"
             style={{ transform: `scale(${zoom})`, transformOrigin: 'center center' }}
           >
-            {/* Slide Header */}
             <div>
               <div className="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 mb-3">
                 <span className="font-semibold text-indigo-600 dark:text-indigo-400">
@@ -316,7 +454,6 @@ export const SlideViewer: React.FC<SlideViewerProps> = ({
               </h2>
             </div>
 
-            {/* Slide Body */}
             <div className="my-6 space-y-4">
               <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800 text-sm sm:text-base leading-relaxed text-slate-700 dark:text-slate-300">
                 <p className="font-medium text-slate-900 dark:text-slate-100 mb-2">
@@ -328,12 +465,13 @@ export const SlideViewer: React.FC<SlideViewerProps> = ({
                 </p>
               </div>
 
-              {/* Notice that slide file will be attached */}
               <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 p-3.5 rounded-lg bg-indigo-50/70 dark:bg-indigo-950/40 border border-indigo-100 dark:border-indigo-900 text-xs">
                 <div className="flex items-center gap-2 text-indigo-900 dark:text-indigo-200">
                   <AlertCircle className="w-4 h-4 text-indigo-600 shrink-0" />
                   <span>
-                    Pending PDF upload: <code className="font-mono">{deck.pdf.replace('/assets/', '')}</code>
+                    {loadError
+                      ? 'Could not load the presentation file. Download the PPTX below or load a local PDF.'
+                      : `Interactive slide preview: ${deck.pdf.replace('/slides/', '')}`}
                   </span>
                 </div>
 
@@ -350,9 +488,8 @@ export const SlideViewer: React.FC<SlideViewerProps> = ({
               </div>
             </div>
 
-            {/* Slide Footer */}
             <div className="pt-4 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-xs text-slate-400">
-              <span>Department of Computer Science & Engineering · BAUST</span>
+              <span>Department of Computer Science &amp; Engineering · BAUST</span>
               <span>Use ← Left / Right → keys to flip slides</span>
             </div>
           </div>

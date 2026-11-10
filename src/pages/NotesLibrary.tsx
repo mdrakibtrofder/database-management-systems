@@ -1,15 +1,16 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   FileText,
   Download,
   Search,
   ExternalLink,
-  BookOpen,
   Eye,
   X,
   AlertCircle,
-  UploadCloud,
-  FileSearch,
+  ChevronLeft,
+  ChevronRight,
+  ZoomIn,
+  ZoomOut,
 } from 'lucide-react';
 import { courseData } from '../data/course';
 import { CourseNote } from '../types';
@@ -22,6 +23,15 @@ export const NotesLibrary: React.FC<NotesLibraryProps> = ({ onNavigate }) => {
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [selectedTag, setSelectedTag] = useState<string>('ALL');
   const [activeModalNote, setActiveModalNote] = useState<CourseNote | null>(null);
+
+  // PDF viewer state
+  const [pdfDoc, setPdfDoc] = useState<any>(null);
+  const [totalPages, setTotalPages] = useState<number>(0);
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const [zoom, setZoom] = useState<number>(1);
+  const [isLoadingPdf, setIsLoadingPdf] = useState<boolean>(false);
+  const [hasPdfError, setHasPdfError] = useState<boolean>(false);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
 
   // Extract all unique tags
   const allTags = Array.from(new Set(courseData.notes.flatMap((n) => n.tags)));
@@ -37,6 +47,117 @@ export const NotesLibrary: React.FC<NotesLibraryProps> = ({ onNavigate }) => {
     return matchesQuery && matchesTag;
   });
 
+  // Load PDF when a note is opened
+  useEffect(() => {
+    if (!activeModalNote) return;
+
+    let isCancelled = false;
+    setIsLoadingPdf(true);
+    setHasPdfError(false);
+    setCurrentPage(1);
+    setPdfDoc(null);
+
+    // @ts-ignore
+    const pdfjsLib = window.pdfjsLib;
+    if (!pdfjsLib) {
+      setHasPdfError(true);
+      setIsLoadingPdf(false);
+      return;
+    }
+
+    const loadPdf = async () => {
+      try {
+        const loadingTask = pdfjsLib.getDocument({
+          url: activeModalNote.file,
+          cMapUrl: 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/cmaps/',
+          cMapPacked: true,
+        });
+
+        const doc = await loadingTask.promise;
+        if (!isCancelled) {
+          setPdfDoc(doc);
+          setTotalPages(doc.numPages);
+          setIsLoadingPdf(false);
+          setHasPdfError(false);
+        }
+      } catch (err) {
+        if (!isCancelled) {
+          setPdfDoc(null);
+          setHasPdfError(true);
+          setIsLoadingPdf(false);
+        }
+      }
+    };
+
+    loadPdf();
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [activeModalNote]);
+
+  // Render current page onto canvas
+  useEffect(() => {
+    if (!pdfDoc || !canvasRef.current) return;
+
+    let renderTask: any = null;
+
+    const renderPage = async () => {
+      try {
+        const page = await pdfDoc.getPage(currentPage);
+        const canvas = canvasRef.current;
+        if (!canvas) return;
+
+        const viewport = page.getViewport({ scale: 1.4 * zoom });
+        canvas.height = viewport.height;
+        canvas.width = viewport.width;
+
+        const renderContext = {
+          canvasContext: canvas.getContext('2d'),
+          viewport: viewport,
+        };
+
+        renderTask = page.render(renderContext);
+        await renderTask.promise;
+      } catch (err) {
+        // ignore canceled render
+      }
+    };
+
+    renderPage();
+
+    return () => {
+      if (renderTask) {
+        renderTask.cancel();
+      }
+    };
+  }, [pdfDoc, currentPage, zoom]);
+
+  // Keyboard navigation inside the modal
+  useEffect(() => {
+    if (!activeModalNote) return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
+
+      if (e.key === 'ArrowRight' || e.key === 'PageDown') {
+        setCurrentPage((p) => Math.min(totalPages, p + 1));
+      } else if (e.key === 'ArrowLeft' || e.key === 'PageUp') {
+        setCurrentPage((p) => Math.max(1, p - 1));
+      } else if (e.key === 'Escape') {
+        setActiveModalNote(null);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [activeModalNote, totalPages]);
+
+  const closeModal = () => {
+    setActiveModalNote(null);
+    setPdfDoc(null);
+  };
+
   return (
     <div className="space-y-10 py-6 sm:py-8">
       {/* Page Header */}
@@ -49,7 +170,7 @@ export const NotesLibrary: React.FC<NotesLibraryProps> = ({ onNavigate }) => {
             Notes & Handouts Library
           </h1>
           <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1 max-w-xl">
-            Access all 6 official course lecture notes, ER teaching guides with 10 worked scenarios, SQL practice sheets, and previous years&apos; final exams.
+            Access all {courseData.notes.length} official course lecture notes, ER teaching guides with 10 worked scenarios, SQL practice sheets, and previous years&apos; final exams. View in-browser or download as PDF.
           </p>
         </div>
 
@@ -119,7 +240,7 @@ export const NotesLibrary: React.FC<NotesLibraryProps> = ({ onNavigate }) => {
               {/* Scanned Badge (for the large 29MB scan) */}
               {note.isScanned && (
                 <div className="p-2 rounded-lg bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-900 text-[11px] text-amber-800 dark:text-amber-300">
-                  Scanned note · light compressed version shown · download full quality
+                  Scanned note · compressed view shown · download full quality
                 </div>
               )}
 
@@ -160,35 +281,58 @@ export const NotesLibrary: React.FC<NotesLibraryProps> = ({ onNavigate }) => {
                 <span>View in Browser</span>
               </button>
 
-              <a
-                href={note.file}
-                download={note.fileName}
-                className="inline-flex items-center gap-1 text-slate-500 hover:text-slate-900 dark:hover:text-white transition-colors"
-              >
-                <Download className="w-3.5 h-3.5" />
-                <span>Download</span>
-              </a>
+              <div className="flex items-center gap-3">
+                <a
+                  href={note.file}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1 text-slate-500 hover:text-slate-900 dark:hover:text-white transition-colors"
+                  title="Open in new tab"
+                >
+                  <ExternalLink className="w-3.5 h-3.5" />
+                  <span className="hidden sm:inline">Open</span>
+                </a>
+                <a
+                  href={note.file}
+                  download={note.fileName}
+                  className="inline-flex items-center gap-1 text-slate-500 hover:text-slate-900 dark:hover:text-white transition-colors"
+                  title="Download"
+                >
+                  <Download className="w-3.5 h-3.5" />
+                  <span className="hidden sm:inline">Download</span>
+                </a>
+              </div>
             </div>
           </div>
         ))}
       </div>
 
-      {/* Note Preview Modal */}
+      {/* Note Preview Modal with PDF rendering */}
       {activeModalNote && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fadeIn">
-          <div className="relative w-full max-w-4xl max-h-[90vh] bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 flex flex-col overflow-hidden">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-slate-900/70 backdrop-blur-sm animate-fadeIn">
+          <div className="relative w-full max-w-5xl max-h-[95vh] bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 flex flex-col overflow-hidden">
             {/* Modal Header */}
-            <div className="p-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between gap-4">
-              <div>
-                <h3 className="font-bold text-sm sm:text-base text-slate-900 dark:text-slate-100">
+            <div className="p-3 sm:p-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between gap-4 shrink-0">
+              <div className="min-w-0">
+                <h3 className="font-bold text-sm sm:text-base text-slate-900 dark:text-slate-100 truncate">
                   {activeModalNote.title}
                 </h3>
-                <div className="text-xs text-slate-500 font-mono mt-0.5">
+                <div className="text-xs text-slate-500 font-mono mt-0.5 truncate">
                   {activeModalNote.fileName} · {activeModalNote.pages} pages · {activeModalNote.size}
                 </div>
               </div>
 
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+                <a
+                  href={activeModalNote.file}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="hidden sm:inline-flex items-center gap-1 px-3 py-1.5 text-xs font-semibold text-slate-700 dark:text-slate-200 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-lg transition-colors"
+                  title="Open in new tab"
+                >
+                  <ExternalLink className="w-3.5 h-3.5" />
+                  <span>Open</span>
+                </a>
                 <a
                   href={activeModalNote.file}
                   download={activeModalNote.fileName}
@@ -198,49 +342,121 @@ export const NotesLibrary: React.FC<NotesLibraryProps> = ({ onNavigate }) => {
                   <span>Download</span>
                 </a>
                 <button
-                  onClick={() => setActiveModalNote(null)}
-                  className="p-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 rounded-lg"
+                  onClick={closeModal}
+                  className="p-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                  aria-label="Close"
                 >
                   <X className="w-5 h-5" />
                 </button>
               </div>
             </div>
 
-            {/* Modal Body: Document Preview Stage */}
-            <div className="flex-1 overflow-y-auto p-6 bg-slate-50 dark:bg-slate-950 flex flex-col items-center justify-center min-h-[400px]">
-              <div className="w-full max-w-2xl bg-white dark:bg-slate-900 rounded-xl shadow-lg border border-slate-200 dark:border-slate-800 p-8 space-y-4">
-                <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 rounded-xl bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 flex items-center justify-center">
-                    <FileSearch className="w-6 h-6" />
-                  </div>
-                  <div>
-                    <h4 className="font-bold text-slate-900 dark:text-slate-100 text-base">
-                      {activeModalNote.title}
-                    </h4>
-                    <p className="text-xs text-slate-500">
-                      Supports Weeks: {activeModalNote.weeks.map((w) => `Week ${w}`).join(', ')}
-                    </p>
-                  </div>
+            {/* PDF Toolbar */}
+            {pdfDoc && (
+              <div className="flex items-center justify-between gap-2 px-3 sm:px-4 py-2 bg-slate-50 dark:bg-slate-950 border-b border-slate-200 dark:border-slate-800 text-xs shrink-0">
+                <div className="flex items-center gap-1.5">
+                  <button
+                    onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                    disabled={currentPage <= 1}
+                    className="p-1.5 text-slate-500 hover:text-slate-900 dark:hover:text-white rounded disabled:opacity-30 disabled:pointer-events-none hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors"
+                    title="Previous page"
+                  >
+                    <ChevronLeft className="w-4 h-4" />
+                  </button>
+                  <span className="font-mono text-slate-600 dark:text-slate-300">
+                    {currentPage} / {totalPages}
+                  </span>
+                  <button
+                    onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                    disabled={currentPage >= totalPages}
+                    className="p-1.5 text-slate-500 hover:text-slate-900 dark:hover:text-white rounded disabled:opacity-30 disabled:pointer-events-none hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors"
+                    title="Next page"
+                  >
+                    <ChevronRight className="w-4 h-4" />
+                  </button>
                 </div>
 
-                <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/60 text-xs sm:text-sm text-slate-700 dark:text-slate-300 leading-relaxed border border-slate-100 dark:border-slate-800">
-                  {activeModalNote.description}
-                </div>
-
-                <div className="p-4 rounded-xl bg-indigo-50/70 dark:bg-indigo-950/40 border border-indigo-100 dark:border-indigo-900 text-xs space-y-2">
-                  <div className="flex items-center gap-2 text-indigo-900 dark:text-indigo-200 font-semibold">
-                    <AlertCircle className="w-4 h-4 text-indigo-600 shrink-0" />
-                    <span>Target Document Path:</span>
-                  </div>
-                  <code className="block font-mono text-[11px] text-indigo-700 dark:text-indigo-300 bg-white dark:bg-slate-900 p-2 rounded border border-indigo-200 dark:border-indigo-800 overflow-x-auto">
-                    {activeModalNote.file}
-                  </code>
-                  <p className="text-indigo-900/80 dark:text-indigo-300/80">
-                    Once the PDF file is placed into your assets folder, this viewer renders page-by-page directly in-browser using PDF.js.
-                  </p>
+                <div className="flex items-center gap-1.5">
+                  <button
+                    onClick={() => setZoom((z) => Math.max(0.5, z - 0.15))}
+                    className="p-1.5 text-slate-500 hover:text-slate-900 dark:hover:text-white rounded hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors"
+                    title="Zoom out"
+                  >
+                    <ZoomOut className="w-4 h-4" />
+                  </button>
+                  <span className="font-mono text-[11px] text-slate-500 w-12 text-center">
+                    {Math.round(zoom * 100)}%
+                  </span>
+                  <button
+                    onClick={() => setZoom((z) => Math.min(2.5, z + 0.15))}
+                    className="p-1.5 text-slate-500 hover:text-slate-900 dark:hover:text-white rounded hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors"
+                    title="Zoom in"
+                  >
+                    <ZoomIn className="w-4 h-4" />
+                  </button>
                 </div>
               </div>
+            )}
+
+            {/* Modal Body: PDF Canvas */}
+            <div className="flex-1 overflow-auto p-4 sm:p-6 bg-slate-100 dark:bg-slate-950 flex items-start justify-center">
+              {isLoadingPdf && (
+                <div className="flex flex-col items-center gap-3 text-slate-400 animate-pulse py-20">
+                  <div className="w-12 h-12 rounded-xl bg-slate-200 dark:bg-slate-800 flex items-center justify-center">
+                    <FileText className="w-6 h-6 text-indigo-400" />
+                  </div>
+                  <p className="text-sm">Loading document...</p>
+                </div>
+              )}
+
+              {!isLoadingPdf && hasPdfError && (
+                <div className="w-full max-w-md bg-white dark:bg-slate-900 rounded-xl shadow-lg border border-slate-200 dark:border-slate-800 p-6 space-y-4 text-center">
+                  <div className="w-14 h-14 mx-auto rounded-xl bg-amber-50 dark:bg-amber-950/40 text-amber-500 flex items-center justify-center">
+                    <AlertCircle className="w-7 h-7" />
+                  </div>
+                  <div>
+                    <h4 className="font-bold text-slate-900 dark:text-slate-100">
+                      Could not load PDF preview
+                    </h4>
+                    <p className="text-xs text-slate-500 mt-1">
+                      The PDF file may be too large or PDF.js failed to load. You can still open or download it.
+                    </p>
+                  </div>
+                  <div className="flex flex-col sm:flex-row gap-2 justify-center">
+                    <a
+                      href={activeModalNote.file}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center justify-center gap-1.5 px-4 py-2 text-xs font-semibold text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg"
+                    >
+                      <ExternalLink className="w-3.5 h-3.5" />
+                      <span>Open in New Tab</span>
+                    </a>
+                    <a
+                      href={activeModalNote.file}
+                      download={activeModalNote.fileName}
+                      className="inline-flex items-center justify-center gap-1.5 px-4 py-2 text-xs font-semibold text-slate-700 dark:text-slate-200 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-lg"
+                    >
+                      <Download className="w-3.5 h-3.5" />
+                      <span>Download PDF</span>
+                    </a>
+                  </div>
+                </div>
+              )}
+
+              {!isLoadingPdf && !hasPdfError && pdfDoc && (
+                <div className="shadow-2xl rounded-lg overflow-hidden bg-white max-w-full">
+                  <canvas ref={canvasRef} className="max-w-full h-auto block" />
+                </div>
+              )}
             </div>
+
+            {/* Footer hint */}
+            {pdfDoc && (
+              <div className="px-4 py-2 bg-slate-50 dark:bg-slate-950 border-t border-slate-200 dark:border-slate-800 text-[11px] text-slate-400 text-center shrink-0">
+                Use ← / → arrow keys to flip pages · Esc to close
+              </div>
+            )}
           </div>
         </div>
       )}
