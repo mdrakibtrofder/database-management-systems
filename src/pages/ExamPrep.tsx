@@ -96,7 +96,7 @@ export const ExamPrep: React.FC<ExamPrepProps> = ({ onNavigate }) => {
             Open in Document Viewer
           </button>
           <a
-            href="/notes/CSE_2205_Previous_Years_Final_Questions.pdf"
+            href={`${import.meta.env.BASE_URL}notes/CSE_2205_Previous_Years_Final_Questions.pdf`}
             download="CSE_2205_Previous_Years_Final_Questions.pdf"
             className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-xs shadow-xs transition-colors"
           >

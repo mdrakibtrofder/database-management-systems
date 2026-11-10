@@ -471,7 +471,7 @@ export const SlideViewer: React.FC<SlideViewerProps> = ({
                   <span>
                     {loadError
                       ? 'Could not load the presentation file. Download the PPTX below or load a local PDF.'
-                      : `Interactive slide preview: ${deck.pdf.replace('/slides/', '')}`}
+                      : `Interactive slide preview: ${deck.pdf.split('/').pop()}`}
                   </span>
                 </div>
 

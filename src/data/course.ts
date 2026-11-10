@@ -183,7 +183,7 @@ export const labsList: LabDefinition[] = [
   },
 ];
 
-export const courseData: CourseData = {
+const rawCourseData: CourseData = {
   code: 'CSE 2205',
   title: 'Database Management Systems',
   credit: '3.00 (3 hours/week)',
@@ -1896,4 +1896,23 @@ export const courseData: CourseData = {
     { id: 'eq-15', year: 'Summer 2025', exam: 'Term Final', questionNo: '8 (a)', topic: 'Wait-For Graph Deadlock Detection & Wait-Die vs Wound-Wait', weekId: 10, co: 'CO4', marks: 7 },
     { id: 'eq-16', year: 'Summer 2025', exam: 'Term Final', questionNo: '8 (b)', topic: 'Log-Based Recovery: Forward REDO and Backward UNDO with Checkpoints', weekId: 10, co: 'CO4', marks: 7 },
   ],
+};
+
+// Public assets are served from the deploy base path (e.g. /database-management-systems/ on
+// GitHub Pages), so prefix the root-relative asset URLs once here at the data layer.
+const withBase = (path: string): string =>
+  path.startsWith('/') ? `${import.meta.env.BASE_URL}${path.slice(1)}` : path;
+
+export const courseData: CourseData = {
+  ...rawCourseData,
+  notes: rawCourseData.notes.map((note) => ({ ...note, file: withBase(note.file) })),
+  weeks: rawCourseData.weeks.map((week) => ({
+    ...week,
+    decks: week.decks.map((deck) => ({
+      ...deck,
+      pdf: withBase(deck.pdf),
+      pptx: withBase(deck.pptx),
+      thumb: withBase(deck.thumb),
+    })),
+  })),
 };

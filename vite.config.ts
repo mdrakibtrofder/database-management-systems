@@ -5,6 +5,8 @@ import {defineConfig} from 'vite';
 
 export default defineConfig(() => {
   return {
+    // Served from https://mdrakibtrofder.github.io/database-management-systems/
+    base: '/database-management-systems/',
     plugins: [react(), tailwindcss()],
     resolve: {
       alias: {
