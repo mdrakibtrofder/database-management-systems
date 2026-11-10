@@ -21,6 +21,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const navLinks = [
+    { label: 'Home', path: '/' },
     { label: 'Roadmap', path: '/weeks' },
     { label: 'Notes', path: '/notes' },
     { label: 'Visualizations', path: '/labs' },
